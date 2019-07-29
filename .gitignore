@@ -1,0 +1,4 @@
+# ignore .mod/.smod/.o files
+*.mod
+*.smod
+*.o
