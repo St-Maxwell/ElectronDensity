@@ -26,8 +26,11 @@ module m_basis_func
     integer :: num_elec ! number of electrons
     integer :: num_alpha ! number of alpha electrons
     integer :: num_beta ! number of beta electrons
-    character(len=2) :: wf_type ! wave function type: 'R', 'U', 'RO'
+    character(len=2) :: wf_type ! wave function type: 'R', 'U', 'RO', 'NO'
     type(basis_function), dimension(:), allocatable :: basis
+    real(kind=r8), dimension(:), allocatable :: num_occ
+    real(kind=r8), dimension(:,:), allocatable :: amo_coeff
+    real(kind=r8), dimension(:,:), allocatable :: bmo_coeff
     contains
     !  procedure :: density
   end type

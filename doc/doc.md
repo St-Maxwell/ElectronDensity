@@ -77,3 +77,19 @@ real :: nocc(:iocc)
 rho = sum( phi**2 * nocc )
 ```
 
+## .fch文件波函数类型
+### Gaussian
+
+* 限制性分子轨道
+   * 闭壳层：默认即可
+   * 限制性开壳层：`RO`
+* 非限制性分子轨道
+   * 开壳层：默认即可
+   * 自旋极化单重态：`UHF/DFT guess=mix`
+* 自然轨道
+   * `density=current` + `guess(save,only,naturalorbitals) chkbasis`
+   * 限制性闭壳层：默认
+   * 非限制性开壳层：默认
+   * 限制性开壳层：不支持（`RO`后HF都没有解析梯度）
+   * 自旋极化单重态：以`UHF/DFT guess=mix`作为参考态
+   * Gaussian输出的.fch中，自然轨道不包含自旋信息，其占据数为$0\text{--}2.0$。虽然会输出`beta`轨道信息，但实际上和`alpha`轨道的信息一模一样。

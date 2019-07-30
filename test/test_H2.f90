@@ -7,6 +7,7 @@ program main
 
   open(unit=iounit, file='H2_STO-3G.fch', status='old', action='read')
   call read_basis_func(iounit, mol)
+  call read_mo_coeff(iounit, mol)
   close(iounit)
 
 end program
