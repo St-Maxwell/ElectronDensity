@@ -32,6 +32,10 @@ $$ \chi = N x^{l_x} y^{l_y} z^{l_z} \mathrm{e}^{-\zeta r^2} $$
 $$ \begin{aligned} N &= \left( \frac{2\zeta}{\pi} \right)^{3/4} \left[ \frac{(4\zeta)^{l_x+l_y+l_z}}{(2l_x-1)!!(2l_y-1)!!(2l_z-1)!!} \right]^{1/2} \\ &= \left( \frac{2\zeta}{\pi} \right)^{3/4} \left[ \frac{(8\zeta)^{l_x+l_y+l_z}l_x!l_y!l_z!}{(2l_x)!(2l_y)!(2l_z)!} \right]^{1/2} \end{aligned} $$
 
 ## 需要从.fch文件读取的量
+波函数类型
+> 如果是自然轨道，需要手动将`.fch`文件第一行内容改为`isNO`；  
+从第二行确定波函数为`R`、`U`、`RO`。若使用的方法首字母为O，且为闭壳层的情况，会误认为波函数为`RO`，虽然并不影响密度的计算。  
+`SP        RB3LYP                                                      6-31G(d,p)`    
 
 电子数
 > `Number of electrons                        I               10`  
@@ -59,7 +63,7 @@ $$ \begin{aligned} N &= \left( \frac{2\zeta}{\pi} \right)^{3/4} \left[ \frac{(4\
 原函数收缩系数
 > `Contraction coefficients                   R   N=          21`
 
-原函数收缩系数（sp型函数）
+原函数收缩系数（sp(p)型函数）
 > `P(S=P) Contraction coefficients            R   N=          21`
 
 基函数坐标
@@ -68,14 +72,8 @@ $$ \begin{aligned} N &= \left( \frac{2\zeta}{\pi} \right)^{3/4} \left[ \frac{(4\
 分子轨道系数
 > `Alpha MO coefficients                      R   N=         625`
 
-
-## 实现
-密度
-```fortran
-real :: phi(:iocc)
-real :: nocc(:iocc)
-rho = sum( phi**2 * nocc )
-```
+对于自然轨道，这一部分数据实际上是轨道占据数
+> `Alpha Orbital Energies                     R   N=          25`
 
 ## .fch文件波函数类型
 ### Gaussian
@@ -93,3 +91,12 @@ rho = sum( phi**2 * nocc )
    * 限制性开壳层：不支持（`RO`后HF都没有解析梯度）
    * 自旋极化单重态：以`UHF/DFT guess=mix`作为参考态
    * Gaussian输出的.fch中，自然轨道不包含自旋信息，其占据数为$0\text{--}2.0$。虽然会输出`beta`轨道信息，但实际上和`alpha`轨道的信息一模一样。
+
+## 例子
+### $\text{CH}_3$自由基
+![CH3](CH3_density.png)
+$\text{CH}_3$自由基所在平面上的电子密度。
+
+### $\text{H}_2$分子
+![H2](H2_density.png)
+沿$\text{H}_2$所在轴的电子密度，注意到在核的位置电子密度梯度不连续。
