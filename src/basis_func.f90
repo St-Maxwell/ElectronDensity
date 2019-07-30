@@ -20,6 +20,9 @@ module m_basis_func
   type :: basis_function
     type(gtf), dimension(:), allocatable :: gf ! gauss function
     real(kind=r8), dimension(:), allocatable :: cf !contraction factor
+
+    contains
+      procedure :: v => value_basis
   end type
 
   type :: molecule
@@ -29,28 +32,91 @@ module m_basis_func
     character(len=2) :: wf_type ! wave function type: 'R', 'U', 'RO', 'NO'
     type(basis_function), dimension(:), allocatable :: basis
     real(kind=r8), dimension(:), allocatable :: num_occ
-    real(kind=r8), dimension(:,:), allocatable :: amo_coeff
+    real(kind=r8), dimension(:,:), allocatable :: amo_coeff ! C(imo,ibss)
     real(kind=r8), dimension(:,:), allocatable :: bmo_coeff
     contains
-    !  procedure :: density
+      procedure :: density
   end type
 
   contains
   
-  !real function density(this, x, y, z, dtype)
-  !  class(molecule), intent(in) :: this
-  !  real(kind=r8), intent(in) :: x, y, z
-  !  character(len=1), intent(in), optional :: dtype ! density type
-  !
-  !  if ( present(dtype) ) then
-  !    if (dtype == 'a') continue ! calculate alpha density
-  !    if (dtype == 'b') continue ! calculate beta density
-  !  else
-  !    continue ! calculate total density
-  !  end if
-  !
-  !end function
+  real(kind=r8) function density(this, x, y, z, dtype)
+    class(molecule), intent(in) :: this
+    real(kind=r8), intent(in) :: x, y, z
+    character(len=1), intent(in) :: dtype ! density type
+    !---------------------------------------------------------------------------
+    real(kind=r8) :: rhoa, rhob
+    
+    if (dtype == 't') then
+
+      if (this%wf_type == 'U ' .or. this%wf_type == 'RO') then
+        rhoa = rho(this, x, y, z, 'a')
+        rhob = rho(this, x, y, z, 'b')
+        density = rhoa + rhob
+      else if (this%wf_type == 'R ') then
+        rhoa = rho(this, x, y, z, 'a')
+        density = 2.0_r8 * rhoa
+      else if (this%wf_type == 'NO') then
+        density = rho(this, x, y, z, 'n')
+      end if
+
+      return
+
+    end if
+
+    if (this%wf_type == 'NO') stop "routine density: alpha/beta density is not available for natural orbital"
+    if (dtype == 'a') then
+      density = rho(this, x, y, z, 'a')
+    else if (dtype == 'b') then
+      density = rho(this, x, y, z, 'b')
+    end if
   
+  end function
+
+  real(kind=r8) function rho(this, x, y, z, dtype)
+    class(molecule), intent(in) :: this
+    real(kind=r8), intent(in) :: x, y, z
+    character(len=1), intent(in) :: dtype
+    !---------------------------------------------------------------------------
+    real(kind=r8), dimension(:), allocatable :: amo, bmo ! alpha/beta occupied orbitals
+    integer :: imo
+  
+    if (dtype == 'a') then
+
+      allocate( amo(this%num_alpha) )
+      do imo = 1, this%num_alpha
+        amo(imo) = sum( this%amo_coeff(imo,:) * this%basis(:)%v(x,y,z) )
+      end do
+      rho = sum( amo**2 )
+
+    else if (dtype == 'b') then
+
+      allocate( bmo(this%num_beta) )
+      do imo = 1, this%num_beta
+        bmo(imo) = sum( this%bmo_coeff(imo,:) * this%basis(:)%v(x,y,z) )
+      end do
+      rho = sum( bmo**2 )
+
+    else if (dtype == 'n') then
+
+      allocate( amo( size(this%num_occ) ) )
+      do imo = 1, size(this%num_occ)
+        amo(imo) = sum( this%amo_coeff(imo,:) * this%basis(:)%v(x,y,z) )
+      end do
+      rho = sum( amo**2 * this%num_occ )
+
+    end if
+
+  end function
+
+  elemental real(kind=r8) function value_basis(this, x, y, z)
+    class(basis_function), intent(in) :: this
+    real(kind=r8), intent(in) :: x, y, z
+
+    value_basis = sum( this%gf(:)%v(x,y,z) * this%cf )
+
+  end function
+
   subroutine initialize_gtf(this, locate, zeta, lx, ly, lz)
     class(gtf) :: this
     real(kind=r8), intent(in) :: zeta
@@ -72,9 +138,9 @@ module m_basis_func
 
   end subroutine
   
-  real(kind=r8) function value_gtf(this, x, y, z)
-    class(gtf) :: this
-    real(kind=r8) :: x, y, z
+  elemental real(kind=r8) function value_gtf(this, x, y, z)
+    class(gtf), intent(in) :: this
+    real(kind=r8), intent(in) :: x, y, z
 
     associate(rx => x-this%x, &
               ry => y-this%y, &
@@ -101,6 +167,7 @@ module m_general
     integer, intent(in) :: n
     integer :: iter
 
+    if (n < 0) stop "routine factorial: negative number input"
     factorial = 1
     do iter = 2, n
       factorial = factorial * iter
@@ -117,12 +184,11 @@ module m_general
     rewind(iounit)
     do while (.true.)
       read(iounit, '(A80)', iostat=ierr) char_tmp
-      if ( ierr /= 0) stop "label not found"
+      if ( ierr /= 0) stop "routinte locate_label: label not found"
       if ( index(adjustl(char_tmp), label) == 1 ) exit
     end do
     backspace(iounit)
 
   end subroutine
-
 
 end module

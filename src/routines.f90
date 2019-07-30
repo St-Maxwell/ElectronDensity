@@ -210,6 +210,11 @@ submodule (m_routines) fch_routine
                        ibss=1,num_basis ), imo=1,num_mo )
     end if
 
+    if ( .not. allocated(mol%bmo_coeff) ) then
+      allocate( mol%bmo_coeff(num_mo, num_basis) )
+      mol%bmo_coeff = mol%amo_coeff
+    end if
+
   end subroutine
 
 end submodule
