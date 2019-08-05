@@ -118,7 +118,7 @@ submodule (m_routines) fch_routine
 
         allocate( basis%cf( sco ) )
         allocate( basis%gf( sco ) )
-        
+
         locate = shl_coord(ishl*3-2:ishl*3)
         lx = type2lx( s2f(shl_type(ishl), ibsshl) )
         ly = type2ly( s2f(shl_type(ishl), ibsshl) )
@@ -161,16 +161,16 @@ submodule (m_routines) fch_routine
     ! check wave function type
     rewind(iounit)
     read(iounit, *) char_tmp
-    if ( index(adjustl(char_tmp), 'isNO') == 1) then
+    if (index(adjustl(char_tmp), 'isNO') == 1) then
       mol%wf_type = 'NO'
     else
       read(iounit, '(A10,A10)') jobtype, method
       ! confused by methods of which the name begins with letter 'O'
-      if ( index(trim(method), 'RO') == 1 ) then 
+      if (index(trim(method), 'RO') == 1) then 
         mol%wf_type = 'RO'
-      else if ( index(trim(method), 'R') == 1) then
+      else if (index(trim(method), 'R') == 1) then
         mol%wf_type = 'R'
-      else if ( index(trim(method), 'U') == 1) then
+      else if (index(trim(method), 'U') == 1) then
         mol%wf_type = 'U'
       end if
     end if
